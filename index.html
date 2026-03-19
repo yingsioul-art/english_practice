@@ -1,383 +1,964 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>萬用主題語塊練習 App</title>
+import React, { useState, useEffect, useRef } from 'react';
+
+// 內建 SVG 圖示元件 (替代 lucide-react，避免環境載入錯誤)
+const Icon = ({ name, size = 24, className = "" }) => {
+  const svgProps = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className };
+  switch (name) {
+    case 'Volume2': return <svg {...svgProps}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>;
+    case 'Mic': return <svg {...svgProps}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>;
+    case 'ArrowRight': return <svg {...svgProps}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
+    case 'ArrowLeft': return <svg {...svgProps}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
+    case 'RefreshCw': return <svg {...svgProps}><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>;
+    case 'BookOpen': return <svg {...svgProps}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
+    case 'Edit3': return <svg {...svgProps}><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>;
+    case 'Headphones': return <svg {...svgProps}><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>;
+    case 'MessageCircle': return <svg {...svgProps}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>;
+    case 'Check': return <svg {...svgProps}><polyline points="20 6 9 17 4 12"></polyline></svg>;
+    case 'X': return <svg {...svgProps}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+    case 'PlayCircle': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>;
+    case 'AlertCircle': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>;
+    case 'List': return <svg {...svgProps}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
+    case 'BrainCircuit': return <svg {...svgProps}><path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08 2.5 2.5 0 0 0 4.91.05L12 20V4.5Z"></path><path d="M16 8V5c0-1.1.9-2 2-2"></path><path d="M12 13h4"></path><path d="M12 17h6"></path><path d="M19 13v4"></path><path d="M22 13h-3"></path><path d="M19 17v4"></path><path d="M22 8h-3"></path><circle cx="19" cy="8" r="1"></circle><circle cx="19" cy="13" r="1"></circle><circle cx="19" cy="17" r="1"></circle></svg>;
+    case 'Frown': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>;
+    case 'Meh': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="15" x2="16" y2="15"></line><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>;
+    case 'Smile': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>;
+    case 'Zap': return <svg {...svgProps}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>;
+    case 'BarChart2': return <svg {...svgProps}><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>;
+    case 'Award': return <svg {...svgProps}><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>;
+    default: return null;
+  }
+};
+
+// 輔助函式：產生例句與對應的中文翻譯
+const generateExamples = (en, zh) => {
+  const examplesMap = {
+    "daily routines and habits": [
+      { text: "I am trying to improve my daily routines and habits.", translation: "我正在試著改善我的日常作息與習慣。" },
+      { text: "Writing down your daily routines and habits helps you stay focused.", translation: "寫下你的日常作息與習慣有助於保持專注。" }
+    ],
+    "building better habits": [
+      { text: "Building better habits takes time and consistency.", translation: "建立好習慣需要時間和一致性。" }
+    ],
+    "comfort food": [
+      { text: "Ice cream is my ultimate comfort food.", translation: "冰淇淋是我最極致的療癒食物。" }
+    ],
+    "experiencing culture shock": [
+      { text: "Experiencing culture shock is completely normal when you move abroad.", translation: "當你搬到國外時，經歷文化衝擊是完全正常的。" }
+    ],
+    "working from home": [
+      { text: "Working from home gives me more flexibility.", translation: "居家辦公給我更多彈性。" }
+    ]
+  };
+
+  if (examplesMap[en]) return examplesMap[en];
   
-  <!-- 載入 React 核心 -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  return [
+    { text: `I recently read an article about ${en}.`, translation: `我最近讀了一篇關於「${zh}」的文章。` },
+    { text: `We need to talk about ${en} today.`, translation: `我們今天需要談談關於「${zh}」的事。` },
+    { text: `How do you usually handle ${en}?`, translation: `你通常怎麼處理「${zh}」？` }
+  ];
+};
+
+// 完整提取的 200 個語塊資料庫
+const rawDB = [
+  // Daily routines
+  { en: "daily routines and habits", zh: "日常作息與習慣", category: "日常作息與生活方式" },
+  { en: "building better habits", zh: "建立好習慣", category: "日常作息與生活方式" },
+  { en: "breaking bad habits", zh: "改掉壞習慣", category: "日常作息與生活方式" },
+  { en: "meal prepping", zh: "自己備餐的習慣", category: "日常作息與生活方式" },
+  { en: "how I spend my weekends", zh: "我週末怎麼過", category: "日常作息與生活方式" },
+  { en: "time management", zh: "時間管理", category: "日常作息與生活方式" },
+  { en: "intermittent fasting", zh: "間歇性斷食", category: "日常作息與生活方式" },
+  { en: "decluttering my life", zh: "精簡生活", category: "日常作息與生活方式" },
+  { en: "letting go of unnecessary things", zh: "丟掉不需要的東西", category: "日常作息與生活方式" },
+  { en: "falling out of routine", zh: "作息亂掉", category: "日常作息與生活方式" },
+  { en: "keeping weekends flexible", zh: "週末不排太滿", category: "日常作息與生活方式" },
+  { en: "sleeping in on weekends", zh: "週末睡到自然醒", category: "日常作息與生活方式" },
+  // Food & eating
+  { en: "eating habits", zh: "我的飲食習慣", category: "飲食相關" },
+  { en: "eating out versus cooking at home", zh: "外食跟在家煮", category: "飲食相關" },
+  { en: "comfort food", zh: "感到療癒的食物", category: "飲食相關" },
+  { en: "snacking between meals", zh: "正餐中間吃零食", category: "飲食相關" },
+  { en: "food I crave when stressed", zh: "壓力大時想吃的東西", category: "飲食相關" },
+  { en: "sharing food at the table", zh: "大家一起分食", category: "飲食相關" },
+  { en: "food allergies", zh: "食物過敏", category: "飲食相關" },
+  { en: "checking nutrition labels", zh: "查看營養標籤", category: "飲食相關" },
+  { en: "being a picky eater", zh: "挑嘴", category: "飲食相關" },
+  { en: "going vegan", zh: "吃全素", category: "飲食相關" },
+  // Travel & Culture
+  { en: "airport experience", zh: "機場經驗", category: "旅行與文化" },
+  { en: "experiencing culture shock", zh: "經歷文化衝擊", category: "旅行與文化" },
+  { en: "planning a trip abroad", zh: "規劃出國旅行", category: "旅行與文化" },
+  { en: "dealing with flight delays", zh: "面對班機延誤", category: "旅行與文化" },
+  { en: "adjusting to a new culture", zh: "適應新文化", category: "旅行與文化" },
+  { en: "trying exotic food", zh: "嘗試異國美食", category: "旅行與文化" },
+  { en: "language barriers", zh: "語言隔閡", category: "旅行與文化" },
+  { en: "different social norms", zh: "不同的社交與社會習慣", category: "旅行與文化" },
+  { en: "booking flights and hotels", zh: "訂機票跟飯店", category: "旅行與文化" },
+  { en: "travel expectations vs reality", zh: "旅行期待與現實", category: "旅行與文化" },
+  { en: "dealing with jet lag", zh: "調時差", category: "旅行與文化" },
+  { en: "traveling solo", zh: "獨旅", category: "旅行與文化" },
+  { en: "exchanging currency", zh: "兌換貨幣", category: "旅行與文化" },
+  // Tech & Media
+  { en: "my relationship with my phone", zh: "我和手機的關係", category: "科技與媒體" },
+  { en: "my relationship with social media", zh: "我和社群媒體的關係", category: "科技與媒體" },
+  { en: "cutting down screen time", zh: "減少螢幕時間", category: "科技與媒體" },
+  { en: "needing a digital break", zh: "需要數位休息", category: "科技與媒體" },
+  { en: "taking breaks from social media", zh: "暫時遠離社群", category: "科技與媒體" },
+  { en: "music", zh: "音樂", category: "科技與媒體" },
+  { en: "watching movies", zh: "看電影", category: "科技與媒體" },
+  { en: "playing online games", zh: "玩線上遊戲", category: "科技與媒體" },
+  { en: "listening to podcasts", zh: "聽播客", category: "科技與媒體" },
+  { en: "listening to audiobooks", zh: "聽有聲書", category: "科技與媒體" },
+  { en: "using AI tools", zh: "使用AI 工具", category: "科技與媒體" },
+  { en: "subscribing to newsletters", zh: "訂閱電子報", category: "科技與媒體" },
+  { en: "how AI changes the way we work", zh: "AI 改變我們工作的方式", category: "科技與媒體" },
+  { en: "using AI to improve productivity", zh: "用AI 提升產能", category: "科技與媒體" },
+  { en: "AI being a double-edged sword", zh: "AI 是個雙面刃", category: "科技與媒體" },
+  // Taiwanese food culture
+  { en: "having hot pot with friends", zh: "跟朋友吃火鍋", category: "台灣飲食文化" },
+  { en: "drinking bubble tea", zh: "喝珍奶", category: "台灣飲食文化" },
+  { en: "trying seasonal drinks", zh: "試試季節限定飲料", category: "台灣飲食文化" },
+  { en: "having late-night snacks", zh: "吃宵夜", category: "台灣飲食文化" },
+  { en: "eating family-style", zh: "合菜式吃法", category: "台灣飲食文化" },
+  { en: "having brunch on weekends", zh: "週末吃早午餐", category: "台灣飲食文化" },
+  { en: "ordering food through delivery Apps", zh: "用外送 App 點餐", category: "台灣飲食文化" },
+  { en: "not eating cilantro", zh: "不吃香菜", category: "台灣飲食文化" },
+  { en: "buying breakfast at a local shop", zh: "傳統早餐店買早餐", category: "台灣飲食文化" },
+  // Daily life in Taiwan
+  { en: "night markets", zh: "夜市", category: "台灣日常生活" },
+  { en: "commuting in the city", zh: "市區通勤", category: "台灣日常生活" },
+  { en: "humid summer weather", zh: "潮濕的夏天", category: "台灣日常生活" },
+  { en: "riding a scooter in Taiwan", zh: "在台灣騎機車", category: "台灣日常生活" },
+  { en: "convenience stores", zh: "便利商店", category: "台灣日常生活" },
+  { en: "watching out for scooters", zh: "注意機車", category: "台灣日常生活" },
+  { en: "taking the MRT", zh: "搭捷運", category: "台灣日常生活" },
+  { en: "taking the HSR", zh: "搭高鐵", category: "台灣日常生活" },
+  { en: "navigating busy intersections", zh: "穿越複雜的十字路口", category: "台灣日常生活" },
+  { en: "crowded sidewalks", zh: "擁擠的人行道", category: "台灣日常生活" },
+  { en: "choosing scooters over cars in Taipei", zh: "在台北騎車不開車", category: "台灣日常生活" },
+  { en: "taking Uber", zh: "搭 Uber", category: "台灣日常生活" },
+  { en: "finding a parking spot", zh: "找停車位", category: "台灣日常生活" },
+  { en: "paying utility bills", zh: "付水電費", category: "台灣日常生活" },
+  { en: "assembling furniture from IKEA", zh: "組裝 IKEA 家具", category: "台灣日常生活" },
+  // Money, investing, & financial life
+  { en: "investing in stocks or US stocks", zh: "投資股票、美股", category: "金錢、投資、財務生活" },
+  { en: "compound effect", zh: "複利效應", category: "金錢、投資、財務生活" },
+  { en: "cryptocurrency and blockchain", zh: "加密貨幣與區塊鏈", category: "金錢、投資、財務生活" },
+  { en: "short-term market fluctuations", zh: "短期的市場波動", category: "金錢、投資、財務生活" },
+  { en: "buying ETFs", zh: "買ETF", category: "金錢、投資、財務生活" },
+  { en: "long-term investing", zh: "長期投資", category: "金錢、投資、財務生活" },
+  { en: "setting up an emergency fund", zh: "建立緊急預備金", category: "金錢、投資、財務生活" },
+  { en: "talking about investments with friends", zh: "跟朋友聊投資", category: "金錢、投資、財務生活" },
+  { en: "passive income", zh: "被動收入", category: "金錢、投資、財務生活" },
+  { en: "side projects", zh: "副業", category: "金錢、投資、財務生活" },
+  { en: "saving up for a down payment", zh: "存下購屋頭期款", category: "金錢、投資、財務生活" },
+  // Travel & leisure
+  { en: "visiting hot springs", zh: "泡溫泉", category: "旅行與放鬆" },
+  { en: "staying at a hot spring hotel", zh: "住溫泉飯店", category: "旅行與放鬆" },
+  { en: "traveling around the island", zh: "環島玩", category: "旅行與放鬆" },
+  { en: "escaping the city", zh: "遠離城市", category: "旅行與放鬆" },
+  { en: "taking a short getaway", zh: "來趟小旅行", category: "旅行與放鬆" },
+  { en: "spending time in nature", zh: "親近大自然", category: "旅行與放鬆" },
+  { en: "going on a cruise ship trip", zh: "搭郵輪旅行", category: "旅行與放鬆" },
+  { en: "traveling locally", zh: "國旅", category: "旅行與放鬆" },
+  { en: "going to the beach", zh: "去海邊玩", category: "旅行與放鬆" },
+  { en: "going river tracing", zh: "去溯溪", category: "旅行與放鬆" },
+  { en: "attending a fan meeting", zh: "參加偶像見面會", category: "旅行與放鬆" },
+  { en: "going glamping", zh: "去豪華露營", category: "旅行與放鬆" },
+  { en: "learning how to surf", zh: "學衝浪", category: "旅行與放鬆" },
+  { en: "wine tasting", zh: "品酒", category: "旅行與放鬆" },
+  { en: "going diving", zh: "去潛水", category: "旅行與放鬆" },
+  { en: "going skiing or snowboarding", zh: "去滑雪", category: "旅行與放鬆" },
+  { en: "traveling light", zh: "輕裝旅行", category: "旅行與放鬆" },
+  { en: "doing nothing on a trip", zh: "旅行時什麼都不做", category: "旅行與放鬆" },
+  // Health & Exercise
+  { en: "hitting the gym", zh: "上健身房", category: "健康、運動" },
+  { en: "doing yoga", zh: "做瑜伽", category: "健康、運動" },
+  { en: "going on a diet", zh: "減肥、節食", category: "健康、運動" },
+  { en: "cutting back on sugar", zh: "減少糖分攝取", category: "健康、運動" },
+  { en: "going for a run", zh: "跑步", category: "健康、運動" },
+  { en: "participating in a charity run", zh: "參加公益路跑", category: "健康、運動" },
+  { en: "cycling along the riverside park", zh: "沿著河濱公園騎腳踏車", category: "健康、運動" },
+  { en: "getting a foot massage", zh: "腳底按摩", category: "健康、運動" },
+  { en: "drinking herbal tea for health", zh: "喝養身草本茶", category: "健康、運動" },
+  { en: "lifting weights", zh: "重訓", category: "健康、運動" },
+  { en: "doing meditation", zh: "冥想", category: "健康、運動" },
+  { en: "taking supplements", zh: "吃保健品", category: "健康、運動" },
+  { en: "taking probiotics, fish oil or multivitamins", zh: "吃益生菌、魚油、綜合維他命", category: "健康、運動" },
+  { en: "morning skincare routine", zh: "晨間保養習慣", category: "健康、運動" },
+  { en: "night skincare routine", zh: "夜間保養習慣", category: "健康、運動" },
+  { en: "visiting a physical therapist", zh: "預約物理治療", category: "健康、運動" },
+  { en: "overcoming insomnia", zh: "克服失眠", category: "健康、運動" },
+  { en: "improving my body posture", zh: "改善體態", category: "健康、運動" },
+  { en: "reducing eye strain", zh: "減少眼睛疲勞", category: "健康、運動" },
+  { en: "staying hydrated", zh: "保持水分充足", category: "健康、運動" },
+  { en: "avoiding highly processed foods", zh: "避免高度加工的食品", category: "健康、運動" },
+  // Pets & chores
+  { en: "keeping pets", zh: "養寵物", category: "寵物與家務" },
+  { en: "walking my dog", zh: "遛狗", category: "寵物與家務" },
+  { en: "playing with my pet", zh: "跟寵物玩", category: "寵物與家務" },
+  { en: "buying pet supplies", zh: "買寵物用品", category: "寵物與家務" },
+  { en: "watching pet videos", zh: "看寵物影片", category: "寵物與家務" },
+  { en: "running errands", zh: "辦雜事", category: "寵物與家務" },
+  { en: "doing laundry", zh: "洗衣服", category: "寵物與家務" },
+  { en: "doing the dishes", zh: "洗碗", category: "寵物與家務" },
+  { en: "taking out the trash", zh: "倒垃圾", category: "寵物與家務" },
+  { en: "vacuuming the floor", zh: "吸地板", category: "寵物與家務" },
+  // Social life & entertainment
+  { en: "going to concerts", zh: "去聽演唱會", category: "社交與娛樂" },
+  { en: "bar hopping", zh: "跑酒吧", category: "社交與娛樂" },
+  { en: "going to a KTV", zh: "去唱KTV", category: "社交與娛樂" },
+  { en: "grabbing drinks with friends", zh: "跟朋友喝一杯", category: "社交與娛樂" },
+  { en: "drinking socially", zh: "社交性飲酒", category: "社交與娛樂" },
+  { en: "playing board games", zh: "玩桌遊", category: "社交與娛樂" },
+  { en: "having a hangover", zh: "宿醉", category: "社交與娛樂" },
+  { en: "attending a book launch", zh: "參加新書發表會", category: "社交與娛樂" },
+  { en: "having a barbecue on the rooftop", zh: "在頂樓辦烤肉派對", category: "社交與娛樂" },
+  { en: "going to a theme park", zh: "去遊樂園玩", category: "社交與娛樂" },
+  { en: "playing a room escape game with friends", zh: "跟朋友玩密室逃脫", category: "社交與娛樂" },
+  { en: "going camping", zh: "去露營", category: "社交與娛樂" },
+  { en: "doing a staycation at a nice hotel", zh: "在高級飯店來趟「宅度假」", category: "社交與娛樂" },
+  { en: "watching Netflix shows", zh: "看 Netflix", category: "社交與娛樂" },
+  { en: "going to a comedy club", zh: "去喜劇俱樂部", category: "社交與娛樂" },
+  { en: "watching a live stream of a gaming event", zh: "看電競比賽直播", category: "社交與娛樂" },
+  { en: "inviting friends over for a movie night", zh: "邀請朋友來家裡看電影", category: "社交與娛樂" },
+  // Personal care & shopping
+  { en: "getting a physical checkup", zh: "做健康檢查", category: "個人照顧與購物" },
+  { en: "getting a haircut", zh: "剪頭髮", category: "個人照顧與購物" },
+  { en: "trying a new look", zh: "試試新風格", category: "個人照顧與購物" },
+  { en: "waiting for discounts", zh: "等打折", category: "個人照顧與購物" },
+  { en: "treating myself occasionally", zh: "偶爾犒賞自己", category: "個人照顧與購物" },
+  { en: "trying a new bakery", zh: "試一家新的麵包店", category: "個人照顧與購物" },
+  { en: "impulse buying", zh: "衝動購物", category: "個人照顧與購物" },
+  { en: "shopping at drugstores", zh: "逛藥妝店", category: "個人照顧與購物" },
+  { en: "shopping tax-free", zh: "免稅購物", category: "個人照顧與購物" },
+  { en: "online shopping", zh: "線上購物", category: "個人照顧與購物" },
+  { en: "thrift shopping", zh: "逛二手店", category: "個人照顧與購物" },
+  { en: "treating myself to a luxury spa day", zh: "犒賞自己的奢華的水療SPA", category: "個人照顧與購物" },
+  // Global Issues & Modern Trends
+  { en: "reducing plastic waste", zh: "減少塑膠廢棄物", category: "國際與現代趨勢" },
+  { en: "bringing my own shopping bag", zh: "自備購物袋", category: "國際與現代趨勢" },
+  { en: "using a reusable water bottle", zh: "使用環保杯", category: "國際與現代趨勢" },
+  { en: "fast fashion versus slow fashion", zh: "快時尚與慢時尚", category: "國際與現代趨勢" },
+  { en: "spotting fake news", zh: "辨識假新聞", category: "國際與現代趨勢" },
+  { en: "avoid investment scams", zh: "迴避投資詐騙", category: "國際與現代趨勢" },
+  { en: "the impact of climate change", zh: "氣候變遷的影響", category: "國際與現代趨勢" },
+  { en: "the influence of influencers", zh: "網紅的影響力", category: "國際與現代趨勢" },
+  { en: "the aging population in Taiwan", zh: "台灣的人口老化問題", category: "國際與現代趨勢" },
+  { en: "the rise of the gig economy", zh: "零工經濟的興起", category: "國際與現代趨勢" },
+  // Decisions, mindset & balance
+  { en: "making tough decisions", zh: "做困難的決定", category: "決策、心態、生活平衡" },
+  { en: "motivation", zh: "動力", category: "決策、心態、生活平衡" },
+  { en: "living in the present moment", zh: "活在當下", category: "決策、心態、生活平衡" },
+  { en: "building emotional resilience", zh: "建立情緒韌性", category: "決策、心態、生活平衡" },
+  { en: "balancing work and life", zh: "工作與生活的平衡", category: "決策、心態、生活平衡" },
+  { en: "simple pleasures in life", zh: "生活中的小確幸", category: "決策、心態、生活平衡" },
+  { en: "having a growth mindset", zh: "保有成長型思維", category: "決策、心態、生活平衡" },
+  { en: "practicing gratitude", zh: "練習感恩", category: "決策、心態、生活平衡" },
+  { en: "dealing with anxiety", zh: "應對焦慮", category: "決策、心態、生活平衡" },
+  { en: "taking a mental health day", zh: "放個心理健康假", category: "決策、心態、生活平衡" },
+  // Work, learning & communication
+  { en: "learning English consistently", zh: "穩定持續地學英文", category: "工作、學習、溝通" },
+  { en: "keeping a learning routine", zh: "維持學習習慣", category: "工作、學習、溝通" },
+  { en: "finding time to read", zh: "找時間閱讀", category: "工作、學習、溝通" },
+  { en: "making small talk at work", zh: "職場閒聊", category: "工作、學習、溝通" },
+  { en: "breaking the ice at work", zh: "職場破冰", category: "工作、學習、溝通" },
+  { en: "difficult conversations", zh: "棘手的對話", category: "工作、學習、溝通" },
+  { en: "working with international teams", zh: "跟國際團隊合作", category: "工作、學習、溝通" },
+  { en: "joining meetings in English", zh: "用英文開會", category: "工作、學習、溝通" },
+  { en: "reading between the lines", zh: "讀懂話外之音", category: "工作、學習、溝通" },
+  { en: "taking an online course", zh: "上線上課程", category: "工作、學習、溝通" },
+  // Workplace dynamics and career
+  { en: "preparing for a job interview", zh: "準備面試", category: "職場動態性與職涯" },
+  { en: "updating my LinkedIn profile", zh: "更新 LinkedIn 個人檔案", category: "職場動態性與職涯" },
+  { en: "changing career paths", zh: "轉換職涯跑道", category: "職場動態性與職涯" },
+  { en: "negotiating a higher salary", zh: "談薪水", category: "職場動態性與職涯" },
+  { en: "dealing with difficult coworkers", zh: "應付難搞的同事", category: "職場動態性與職涯" },
+  { en: "handling office politics", zh: "處理辦公室政治", category: "職場動態性與職涯" },
+  { en: "working from home", zh: "居家辦公", category: "職場動態性與職涯" },
+  { en: "digital nomad lifestyle", zh: "數位遊牧生活", category: "職場動態性與職涯" },
+  { en: "the pros and cons of open offices", zh: "開放式辦公室的利弊", category: "職場動態性與職涯" },
+  { en: "dealing with burnout", zh: "應對職業倦怠", category: "職場動態性與職涯" }
+];
+
+const vocabularyDB = rawDB.map(item => ({ ...item, examples: generateExamples(item.en, item.zh) }));
+
+const allCategories = [...new Set(vocabularyDB.map(item => item.category))];
+const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
+export default function App() {
+  const [mode, setMode] = useState('menu'); 
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [filteredDB, setFilteredDB] = useState(vocabularyDB);
   
-  <!-- 載入 Babel 讓瀏覽器可以讀取 React 的 JSX 語法 -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  // ===============================
+  // Flashcard SRS Specific States
+  // ===============================
+  const [fcQueue, setFcQueue] = useState([]);
+  const [fcTotalCards, setFcTotalCards] = useState(0);
+  const [fcStats, setFcStats] = useState({ again: 0, hard: 0, good: 0, easy: 0 });
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [currentExample, setCurrentExample] = useState(null);
+
+  // ===============================
+  // Listening Test Specific States
+  // ===============================
+  const [listenQueue, setListenQueue] = useState([]);
+  const [listenIndex, setListenIndex] = useState(0);
+  const [listenWrongQueue, setListenWrongQueue] = useState([]);
+  const [listenCorrectCount, setListenCorrectCount] = useState(0);
+  const [listenRound, setListenRound] = useState(1);
+  const [showListenSummary, setShowListenSummary] = useState(false);
+  const [isListenAnswered, setIsListenAnswered] = useState(false);
+  const [listeningOptions, setListeningOptions] = useState([]);
+  const [listenFeedback, setListenFeedback] = useState(null);
+
+  // ===============================
+  // General index-based states for other modes (Spelling, Speaking)
+  // ===============================
+  const [currentIndex, setCurrentIndex] = useState(0);
   
-  <!-- 載入 Tailwind CSS 進行排版與美化 -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  // Spelling
+  const [userInput, setUserInput] = useState('');
+  const [spellFeedback, setSpellFeedback] = useState(null);
   
-  <style>
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
+  // Speaking
+  const [isRecording, setIsRecording] = useState(false);
+  const [speakFeedback, setSpeakFeedback] = useState(null);
+
+  // Helper: Play text-to-speech
+  const playAudio = (text) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.85; 
+      window.speechSynthesis.speak(utterance);
     }
-    .animate-fade-in {
-      animation: fadeIn 0.3s ease-out forwards;
+  };
+
+  // 當選擇分類時，初始化所有狀態
+  useEffect(() => {
+    let newDB = selectedCategory === 'All' ? vocabularyDB : vocabularyDB.filter(item => item.category === selectedCategory);
+    setFilteredDB(newDB);
+    setCurrentIndex(0);
+    
+    // 初始化記憶卡佇列
+    const initialFcQueue = shuffle([...newDB]);
+    setFcQueue(initialFcQueue);
+    setFcTotalCards(initialFcQueue.length);
+    setFcStats({ again: 0, hard: 0, good: 0, easy: 0 });
+    setIsFlipped(false);
+
+    // 初始化盲聽測驗佇列
+    const initialListenQueue = shuffle([...newDB]);
+    setListenQueue(initialListenQueue);
+    setListenIndex(0);
+    setListenWrongQueue([]);
+    setListenCorrectCount(0);
+    setListenRound(1);
+    setShowListenSummary(false);
+    setIsListenAnswered(false);
+  }, [selectedCategory]);
+
+  // ===============================
+  // Flashcard SRS Logic
+  // ===============================
+
+  useEffect(() => {
+    if (mode === 'flashcard' && !isFlipped && fcQueue.length > 0) {
+      playAudio(fcQueue[0].en);
     }
-    body { background-color: #f8fafc; } /* slate-50 */
-  </style>
-</head>
-<body>
-  <!-- React App 將會渲染在這裡 -->
-  <div id="root"></div>
+  }, [fcQueue, isFlipped, mode]);
 
-  <!-- App 核心邏輯 -->
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+  const handleFlashcardFlip = () => {
+    if (fcQueue.length === 0) return;
+    if (!isFlipped) {
+      const currentItem = fcQueue[0];
+      const randomExample = currentItem.examples[Math.floor(Math.random() * currentItem.examples.length)];
+      setCurrentExample(randomExample);
+      setIsFlipped(true);
+      playAudio(randomExample.text); 
+    } else {
+      setIsFlipped(false);
+      playAudio(fcQueue[0].en); 
+    }
+  };
 
-    // 內建 SVG 圖示元件
-    const Icon = ({ name, size = 24, className = "" }) => {
-      const svgProps = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className };
-      switch (name) {
-        case 'Volume2': return <svg {...svgProps}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>;
-        case 'Mic': return <svg {...svgProps}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>;
-        case 'ArrowRight': return <svg {...svgProps}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
-        case 'ArrowLeft': return <svg {...svgProps}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
-        case 'RefreshCw': return <svg {...svgProps}><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>;
-        case 'BookOpen': return <svg {...svgProps}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
-        case 'Edit3': return <svg {...svgProps}><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>;
-        case 'Headphones': return <svg {...svgProps}><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>;
-        case 'MessageCircle': return <svg {...svgProps}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>;
-        case 'Check': return <svg {...svgProps}><polyline points="20 6 9 17 4 12"></polyline></svg>;
-        case 'X': return <svg {...svgProps}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
-        case 'PlayCircle': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>;
-        case 'AlertCircle': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>;
-        case 'List': return <svg {...svgProps}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
-        case 'BrainCircuit': return <svg {...svgProps}><path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08 2.5 2.5 0 0 0 4.91.05L12 20V4.5Z"></path><path d="M16 8V5c0-1.1.9-2 2-2"></path><path d="M12 13h4"></path><path d="M12 17h6"></path><path d="M19 13v4"></path><path d="M22 13h-3"></path><path d="M19 17v4"></path><path d="M22 8h-3"></path><circle cx="19" cy="8" r="1"></circle><circle cx="19" cy="13" r="1"></circle><circle cx="19" cy="17" r="1"></circle></svg>;
-        case 'Frown': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>;
-        case 'Meh': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="15" x2="16" y2="15"></line><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>;
-        case 'Smile': return <svg {...svgProps}><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>;
-        case 'Zap': return <svg {...svgProps}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>;
-        case 'BarChart2': return <svg {...svgProps}><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>;
-        case 'Award': return <svg {...svgProps}><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>;
-        default: return null;
-      }
-    };
+  const handleSrsClick = (e, type) => {
+    e.stopPropagation(); 
+    setFcStats(prev => ({ ...prev, [type]: prev[type] + 1 }));
 
-    // 例句產生器
-    const generateExamples = (en, zh) => {
-      const examplesMap = {
-        "daily routines and habits": [{ text: "I am trying to improve my daily routines and habits.", translation: "我正在試著改善我的日常作息與習慣。" }],
-        "working from home": [{ text: "Working from home gives me more flexibility.", translation: "居家辦公給我更多彈性。" }]
-      };
-      if (examplesMap[en]) return examplesMap[en];
-      return [
-        { text: `I recently read an article about ${en}.`, translation: `我最近讀了一篇關於「${zh}」的文章。` },
-        { text: `How do you usually handle ${en}?`, translation: `你通常怎麼處理「${zh}」？` }
-      ];
-    };
+    let newQueue = [...fcQueue];
+    const currentCard = newQueue.shift(); 
 
-    // 精簡版資料庫示範 (保留所有類別)
-    const rawDB = [
-      { en: "daily routines and habits", zh: "日常作息與習慣", category: "日常作息與生活方式" },
-      { en: "building better habits", zh: "建立好習慣", category: "日常作息與生活方式" },
-      { en: "meal prepping", zh: "自己備餐的習慣", category: "日常作息與生活方式" },
-      { en: "eating out versus cooking at home", zh: "外食跟在家煮", category: "飲食相關" },
-      { en: "comfort food", zh: "感到療癒的食物", category: "飲食相關" },
-      { en: "experiencing culture shock", zh: "經歷文化衝擊", category: "旅行與文化" },
-      { en: "traveling solo", zh: "獨旅", category: "旅行與文化" },
-      { en: "cutting down screen time", zh: "減少螢幕時間", category: "科技與媒體" },
-      { en: "using AI tools", zh: "使用AI 工具", category: "科技與媒體" },
-      { en: "drinking bubble tea", zh: "喝珍奶", category: "台灣飲食文化" },
-      { en: "riding a scooter in Taiwan", zh: "在台灣騎機車", category: "台灣日常生活" },
-      { en: "investing in stocks", zh: "投資股票", category: "金錢、投資、財務生活" },
-      { en: "hitting the gym", zh: "上健身房", category: "健康、運動" },
-      { en: "learning English consistently", zh: "穩定持續地學英文", category: "工作、學習、溝通" },
-      { en: "preparing for a job interview", zh: "準備面試", category: "職場動態性與職涯" },
-      { en: "working from home", zh: "居家辦公", category: "職場動態性與職涯" }
-    ];
+    if (type === 'again') {
+      newQueue.splice(1, 0, currentCard);
+    } else if (type === 'hard') {
+      newQueue.splice(Math.floor(newQueue.length / 2), 0, currentCard);
+    } else if (type === 'good') {
+      newQueue.push(currentCard);
+    } else if (type === 'easy') {
+      // do nothing, card is removed
+    }
 
-    const vocabularyDB = rawDB.map(item => ({ ...item, examples: generateExamples(item.en, item.zh) }));
-    const allCategories = [...new Set(vocabularyDB.map(item => item.category))];
-    const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+    setFcQueue(newQueue);
+    setIsFlipped(false);
+  };
 
-    function App() {
-      const [mode, setMode] = useState('menu'); 
-      const [selectedCategory, setSelectedCategory] = useState('All');
-      const [filteredDB, setFilteredDB] = useState(vocabularyDB);
+  const resetFlashcardSession = () => {
+    const initialQueue = shuffle([...filteredDB]);
+    setFcQueue(initialQueue);
+    setFcTotalCards(initialQueue.length);
+    setFcStats({ again: 0, hard: 0, good: 0, easy: 0 });
+    setIsFlipped(false);
+  };
+
+  // ===============================
+  // Listening Test Logic
+  // ===============================
+
+  // 每當題目切換時，產生新的選項並自動發音
+  useEffect(() => {
+    if (mode === 'listening' && listenQueue.length > 0 && !showListenSummary) {
+      const currentWord = listenQueue[listenIndex];
+      // 確保干擾選項不包含正確答案
+      let otherWords = filteredDB.filter(w => w.en !== currentWord.en);
+      if (otherWords.length < 3) otherWords = vocabularyDB.filter(w => w.en !== currentWord.en);
+      const options = shuffle([currentWord, ...shuffle(otherWords).slice(0, 3)]);
       
-      // Flashcard States
-      const [fcQueue, setFcQueue] = useState([]);
-      const [fcTotalCards, setFcTotalCards] = useState(0);
-      const [fcStats, setFcStats] = useState({ again: 0, hard: 0, good: 0, easy: 0 });
-      const [isFlipped, setIsFlipped] = useState(false);
-      const [currentExample, setCurrentExample] = useState(null);
+      setListeningOptions(options);
+      setListenFeedback(null);
+      setIsListenAnswered(false);
+      setTimeout(() => playAudio(currentWord.en), 500);
+    }
+  }, [listenIndex, listenQueue, mode, showListenSummary, filteredDB]);
 
-      // Listening Test States
-      const [listenQueue, setListenQueue] = useState([]);
-      const [listenIndex, setListenIndex] = useState(0);
-      const [listenWrongQueue, setListenWrongQueue] = useState([]);
-      const [listenCorrectCount, setListenCorrectCount] = useState(0);
-      const [listenRound, setListenRound] = useState(1);
-      const [showListenSummary, setShowListenSummary] = useState(false);
-      const [isListenAnswered, setIsListenAnswered] = useState(false);
-      const [listeningOptions, setListeningOptions] = useState([]);
-      const [listenFeedback, setListenFeedback] = useState(null);
+  // 處理作答
+  const handleListenSelect = (selectedZh) => {
+    if (isListenAnswered) return; // 避免重複點擊
+    setIsListenAnswered(true);
 
-      // Other Modes
-      const [currentIndex, setCurrentIndex] = useState(0);
-      const [userInput, setUserInput] = useState('');
-      const [spellFeedback, setSpellFeedback] = useState(null);
-      const [isRecording, setIsRecording] = useState(false);
-      const [speakFeedback, setSpeakFeedback] = useState(null);
+    const currentWord = listenQueue[listenIndex];
+    if (selectedZh === currentWord.zh) {
+      setListenFeedback({ type: 'success', text: '正確！' });
+      setListenCorrectCount(prev => prev + 1);
+    } else {
+      setListenFeedback({ type: 'error', text: `答錯囉，正確答案是: ${currentWord.zh}` });
+      setListenWrongQueue(prev => [...prev, currentWord]);
+    }
+  };
 
-      const playAudio = (text) => {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = 'en-US';
-          utterance.rate = 0.85; 
-          window.speechSynthesis.speak(utterance);
-        }
-      };
+  // 進入下一題或結算
+  const handleListenNext = () => {
+    if (listenIndex + 1 < listenQueue.length) {
+      setListenIndex(prev => prev + 1);
+    } else {
+      setShowListenSummary(true);
+    }
+  };
 
-      useEffect(() => {
-        let newDB = selectedCategory === 'All' ? vocabularyDB : vocabularyDB.filter(item => item.category === selectedCategory);
-        setFilteredDB(newDB);
-        setCurrentIndex(0);
-        
-        const initialFcQueue = shuffle([...newDB]);
-        setFcQueue(initialFcQueue);
-        setFcTotalCards(initialFcQueue.length);
-        setFcStats({ again: 0, hard: 0, good: 0, easy: 0 });
-        setIsFlipped(false);
+  // 針對錯誤題目開始下一輪
+  const startNextListenRound = () => {
+    setListenQueue(shuffle([...listenWrongQueue]));
+    setListenIndex(0);
+    setListenWrongQueue([]);
+    setListenCorrectCount(0);
+    setListenRound(prev => prev + 1);
+    setShowListenSummary(false);
+    setIsListenAnswered(false);
+  };
 
-        const initialListenQueue = shuffle([...newDB]);
-        setListenQueue(initialListenQueue);
-        setListenIndex(0);
-        setListenWrongQueue([]);
-        setListenCorrectCount(0);
-        setListenRound(1);
-        setShowListenSummary(false);
-        setIsListenAnswered(false);
-      }, [selectedCategory]);
+  // 重新啟動整個測驗
+  const resetListeningSession = () => {
+    const initialListenQueue = shuffle([...filteredDB]);
+    setListenQueue(initialListenQueue);
+    setListenIndex(0);
+    setListenWrongQueue([]);
+    setListenCorrectCount(0);
+    setListenRound(1);
+    setShowListenSummary(false);
+    setIsListenAnswered(false);
+  };
 
-      useEffect(() => {
-        if (mode === 'flashcard' && !isFlipped && fcQueue.length > 0) playAudio(fcQueue[0].en);
-      }, [fcQueue, isFlipped, mode]);
+  // ===============================
+  // Common Navigation for Other Modes
+  // ===============================
+  const nextWord = () => {
+    setUserInput(''); setSpellFeedback(null);
+    setSpeakFeedback(null); 
+    setCurrentIndex((prev) => (prev + 1) % filteredDB.length);
+  };
 
-      const handleFlashcardFlip = () => {
-        if (fcQueue.length === 0) return;
-        if (!isFlipped) {
-          const currentItem = fcQueue[0];
-          const randomExample = currentItem.examples[Math.floor(Math.random() * currentItem.examples.length)];
-          setCurrentExample(randomExample);
-          setIsFlipped(true);
-          playAudio(randomExample.text); 
-        } else {
-          setIsFlipped(false);
-          playAudio(fcQueue[0].en); 
-        }
-      };
+  const prevWord = () => {
+    setUserInput(''); setSpellFeedback(null);
+    setSpeakFeedback(null); 
+    setCurrentIndex((prev) => (prev - 1 + filteredDB.length) % filteredDB.length);
+  };
 
-      const handleSrsClick = (e, type) => {
-        e.stopPropagation(); 
-        setFcStats(prev => ({ ...prev, [type]: prev[type] + 1 }));
-        let newQueue = [...fcQueue];
-        const currentCard = newQueue.shift(); 
-        if (type === 'again') newQueue.splice(1, 0, currentCard);
-        else if (type === 'hard') newQueue.splice(Math.floor(newQueue.length / 2), 0, currentCard);
-        else if (type === 'good') newQueue.push(currentCard);
-        setFcQueue(newQueue);
-        setIsFlipped(false);
-      };
+  // ===============================
+  // Spelling & Speaking Logic
+  // ===============================
+  const checkSpelling = () => {
+    const currentWordStr = filteredDB[currentIndex].en.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    const inputStr = userInput.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    if (inputStr === currentWordStr) {
+      setSpellFeedback({ type: 'success', text: '太棒了！拼寫完全正確！' });
+      playAudio(filteredDB[currentIndex].en);
+    } else {
+      setSpellFeedback({ type: 'error', text: `正確答案是: ${filteredDB[currentIndex].en}` });
+    }
+  };
 
-      // Listening Logic
-      useEffect(() => {
-        if (mode === 'listening' && listenQueue.length > 0 && !showListenSummary) {
-          const currentWord = listenQueue[listenIndex];
-          let otherWords = filteredDB.filter(w => w.en !== currentWord.en);
-          if (otherWords.length < 3) otherWords = vocabularyDB.filter(w => w.en !== currentWord.en);
-          const options = shuffle([currentWord, ...shuffle(otherWords).slice(0, 3)]);
-          setListeningOptions(options);
-          setListenFeedback(null);
-          setIsListenAnswered(false);
-          setTimeout(() => playAudio(currentWord.en), 500);
-        }
-      }, [listenIndex, listenQueue, mode, showListenSummary, filteredDB]);
+  const handleSpeak = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeakFeedback({ type: 'error', text: '您的瀏覽器不支援語音辨識。請使用 Google Chrome。' });
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-      const handleListenSelect = (selectedZh) => {
-        if (isListenAnswered) return;
-        setIsListenAnswered(true);
-        const currentWord = listenQueue[listenIndex];
-        if (selectedZh === currentWord.zh) {
-          setListenFeedback({ type: 'success', text: '正確！' });
-          setListenCorrectCount(prev => prev + 1);
-        } else {
-          setListenFeedback({ type: 'error', text: `答錯囉，正確答案是: ${currentWord.zh}` });
-          setListenWrongQueue(prev => [...prev, currentWord]);
-        }
-      };
+    recognition.onstart = () => { setIsRecording(true); setSpeakFeedback(null); };
+    recognition.onerror = () => { setSpeakFeedback({ type: 'error', text: '麥克風權限錯誤，請確認設定。' }); setIsRecording(false); };
+    recognition.onend = () => { setIsRecording(false); };
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      evaluatePronunciation(transcript, filteredDB[currentIndex].en);
+    };
 
-      const handleListenNext = () => {
-        if (listenIndex + 1 < listenQueue.length) setListenIndex(prev => prev + 1);
-        else setShowListenSummary(true);
-      };
+    try { recognition.start(); } catch (e) { setIsRecording(false); }
+  };
 
-      const startNextListenRound = () => {
-        setListenQueue(shuffle([...listenWrongQueue]));
-        setListenIndex(0);
-        setListenWrongQueue([]);
-        setListenCorrectCount(0);
-        setListenRound(prev => prev + 1);
-        setShowListenSummary(false);
-        setIsListenAnswered(false);
-      };
+  const evaluatePronunciation = (transcript, target) => {
+    const cleanTranscript = transcript.toLowerCase().replace(/[^\w\s]/g, '');
+    const cleanTarget = target.toLowerCase().replace(/[^\w\s]/g, '');
+    const targetWords = cleanTarget.split(/\s+/);
+    const spokenWords = cleanTranscript.split(/\s+/);
+    
+    let matchCount = 0;
+    const missedWords = [];
 
-      // General Logic
-      const nextWord = () => { setUserInput(''); setSpellFeedback(null); setSpeakFeedback(null); setCurrentIndex((prev) => (prev + 1) % filteredDB.length); };
-      const prevWord = () => { setUserInput(''); setSpellFeedback(null); setSpeakFeedback(null); setCurrentIndex((prev) => (prev - 1 + filteredDB.length) % filteredDB.length); };
+    targetWords.forEach(word => {
+      if (spokenWords.includes(word)) matchCount++;
+      else missedWords.push(word);
+    });
 
-      const checkSpelling = () => {
-        const currentWordStr = filteredDB[currentIndex].en.toLowerCase().replace(/[^\w\s]/g, '').trim();
-        const inputStr = userInput.toLowerCase().replace(/[^\w\s]/g, '').trim();
-        if (inputStr === currentWordStr) { setSpellFeedback({ type: 'success', text: '太棒了！拼寫完全正確！' }); playAudio(filteredDB[currentIndex].en); }
-        else setSpellFeedback({ type: 'error', text: `正確答案是: ${filteredDB[currentIndex].en}` });
-      };
+    const score = Math.round((matchCount / targetWords.length) * 100);
 
-      const handleSpeak = () => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return setSpeakFeedback({ type: 'error', text: '您的瀏覽器不支援。請使用 Chrome。' });
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.onstart = () => { setIsRecording(true); setSpeakFeedback(null); };
-        recognition.onerror = () => { setIsRecording(false); };
-        recognition.onend = () => setIsRecording(false);
-        recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          const score = transcript.toLowerCase().includes(filteredDB[currentIndex].en.toLowerCase().split(' ')[0]) ? 100 : 50;
-          setSpeakFeedback({ type: score === 100 ? 'success' : 'warning', text: `辨識到: "${transcript}"`, score });
-        };
-        recognition.start();
-      };
+    if (score === 100) {
+      setSpeakFeedback({ type: 'success', text: `完美！辨識到: "${transcript}"`, score });
+    } else if (score >= 50) {
+      setSpeakFeedback({ type: 'warning', text: `不錯喔！建議加強單字: ${missedWords.join(', ')}`, score });
+    } else {
+      setSpeakFeedback({ type: 'error', text: `再試一次！留意這些字的發音: ${missedWords.join(', ')}`, score });
+    }
+  };
 
-      // Renders
-      if (mode === 'menu') {
-        return (
-          <div className="flex flex-col items-center justify-center min-h-[75vh] space-y-8">
-            <div className="text-center mb-4">
-              <h1 className="text-4xl font-extrabold text-gray-800 mb-4">語塊特訓中心</h1>
-              <p className="text-gray-500 text-lg">全方位提升英語力</p>
+  // ===============================
+  // Render Views
+  // ===============================
+  const renderMenu = () => (
+    <div className="flex flex-col items-center justify-center min-h-[75vh] space-y-8">
+      <div className="text-center mb-4">
+        <h1 className="text-4xl font-extrabold text-gray-800 mb-4">語塊特訓中心</h1>
+        <p className="text-gray-500 text-lg">收錄完整 200 個常用主題，全方位提升英語力</p>
+      </div>
+
+      <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <label className="block text-gray-700 font-bold mb-3 flex items-center">
+          <Icon name="List" className="mr-2" size={20} /> 選擇練習主題
+        </label>
+        <select 
+          value={selectedCategory} 
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="w-full p-3 border-2 border-blue-100 rounded-xl bg-blue-50 text-blue-800 font-medium focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-colors"
+        >
+          <option value="All">🌈 全部主題綜合練習 ({vocabularyDB.length} 個)</option>
+          {allCategories.map((cat, idx) => (
+            <option key={idx} value={cat}>
+              {cat} ({vocabularyDB.filter(v => v.category === cat).length} 個)
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+        <button onClick={() => setMode('flashcard')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg">智慧 SRS</div>
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-full group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <Icon name="BrainCircuit" size={28} />
+          </div>
+          <div className="ml-4 text-left">
+            <h2 className="text-xl font-bold text-gray-800">智慧記憶卡片</h2>
+            <p className="text-sm text-gray-500">動態例句朗讀＋間隔重複複習</p>
+          </div>
+        </button>
+
+        <button onClick={() => setMode('spelling')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-green-400 hover:shadow-md transition-all group">
+          <div className="p-4 bg-green-50 text-green-600 rounded-full group-hover:bg-green-600 group-hover:text-white transition-colors">
+            <Icon name="Edit3" size={28} />
+          </div>
+          <div className="ml-4 text-left">
+            <h2 className="text-xl font-bold text-gray-800">拼寫練習</h2>
+            <p className="text-sm text-gray-500">看中文，打出正確的英文</p>
+          </div>
+        </button>
+
+        <button onClick={() => setMode('listening')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-purple-400 hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg">闖關淘汰制</div>
+          <div className="p-4 bg-purple-50 text-purple-600 rounded-full group-hover:bg-purple-600 group-hover:text-white transition-colors">
+            <Icon name="Headphones" size={28} />
+          </div>
+          <div className="ml-4 text-left">
+            <h2 className="text-xl font-bold text-gray-800">盲聽測驗</h2>
+            <p className="text-sm text-gray-500">純聽力測驗，答錯自動重測</p>
+          </div>
+        </button>
+
+        <button onClick={() => setMode('speaking')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-orange-400 hover:shadow-md transition-all group">
+          <div className="p-4 bg-orange-50 text-orange-600 rounded-full group-hover:bg-orange-600 group-hover:text-white transition-colors">
+            <Icon name="MessageCircle" size={28} />
+          </div>
+          <div className="ml-4 text-left">
+            <h2 className="text-xl font-bold text-gray-800">口說評分</h2>
+            <p className="text-sm text-gray-500">AI 語音辨識，揪出發音弱點</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderFlashcard = () => {
+    if (fcQueue.length === 0) {
+      return (
+        <div className="flex flex-col items-center max-w-xl mx-auto mt-8 bg-white p-8 rounded-3xl shadow-sm border border-gray-200 text-center animate-fade-in">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">本次練習完成！🎉</h2>
+          <p className="text-gray-500 mb-8">以下是你在本次各項目的點擊次數總結</p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 w-full">
+            <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col items-center">
+              <Icon name="Frown" className="text-red-500 mb-2" size={28} />
+              <div className="text-xs text-gray-500 font-bold mb-1">Again (重來)</div>
+              <div className="text-xl font-black text-red-600">{fcStats.again} 次</div>
             </div>
-            <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <label className="block text-gray-700 font-bold mb-3 flex items-center"><Icon name="List" className="mr-2" size={20} /> 選擇練習主題</label>
-              <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full p-3 border-2 border-blue-100 rounded-xl bg-blue-50 text-blue-800 font-medium">
-                <option value="All">🌈 全部主題綜合練習</option>
-                {allCategories.map((cat, idx) => <option key={idx} value={cat}>{cat}</option>)}
-              </select>
+            <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 flex flex-col items-center">
+              <Icon name="Meh" className="text-orange-500 mb-2" size={28} />
+              <div className="text-xs text-gray-500 font-bold mb-1">Hard (困難)</div>
+              <div className="text-xl font-black text-orange-600">{fcStats.hard} 次</div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
-              <button onClick={() => setMode('flashcard')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-blue-400">
-                <div className="p-4 bg-blue-50 text-blue-600 rounded-full"><Icon name="BrainCircuit" size={28} /></div>
-                <div className="ml-4 text-left"><h2 className="text-xl font-bold">智慧記憶卡片</h2></div>
-              </button>
-              <button onClick={() => setMode('spelling')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-green-400">
-                <div className="p-4 bg-green-50 text-green-600 rounded-full"><Icon name="Edit3" size={28} /></div>
-                <div className="ml-4 text-left"><h2 className="text-xl font-bold">拼寫練習</h2></div>
-              </button>
-              <button onClick={() => setMode('listening')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-purple-400">
-                <div className="p-4 bg-purple-50 text-purple-600 rounded-full"><Icon name="Headphones" size={28} /></div>
-                <div className="ml-4 text-left"><h2 className="text-xl font-bold">盲聽測驗</h2></div>
-              </button>
-              <button onClick={() => setMode('speaking')} className="flex items-center p-6 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-orange-400">
-                <div className="p-4 bg-orange-50 text-orange-600 rounded-full"><Icon name="MessageCircle" size={28} /></div>
-                <div className="ml-4 text-left"><h2 className="text-xl font-bold">口說評分</h2></div>
-              </button>
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex flex-col items-center">
+              <Icon name="Smile" className="text-blue-500 mb-2" size={28} />
+              <div className="text-xs text-gray-500 font-bold mb-1">Good (良好)</div>
+              <div className="text-xl font-black text-blue-600">{fcStats.good} 次</div>
+            </div>
+            <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex flex-col items-center">
+              <Icon name="Zap" className="text-green-500 mb-2" size={28} />
+              <div className="text-xs text-gray-500 font-bold mb-1">Easy (簡單)</div>
+              <div className="text-xl font-black text-green-600">{fcStats.easy} 次</div>
             </div>
           </div>
-        );
-      }
 
-      return (
-        <div className="max-w-4xl mx-auto pt-4">
-          <div className="flex items-center justify-between mb-8">
-            <button onClick={() => setMode('menu')} className="px-5 py-2 bg-white text-gray-700 rounded-lg shadow-sm border border-gray-200 flex items-center">
-              <Icon name="ArrowLeft" size={18} className="mr-2" /> 返回
+          <div className="flex space-x-4 w-full">
+            <button onClick={() => setMode('menu')} className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-lg transition-colors shadow-sm">
+              回主選單
+            </button>
+            <button onClick={resetFlashcardSession} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors shadow-sm">
+              重新挑戰本分類
             </button>
           </div>
-
-          {mode === 'flashcard' && (
-             fcQueue.length === 0 ? (
-               <div className="text-center p-8 bg-white rounded-3xl"><h2 className="text-2xl font-bold">完成！</h2><button onClick={() => setMode('menu')} className="mt-4 p-4 bg-blue-600 text-white rounded-xl">回主選單</button></div>
-             ) : (
-              <div className="w-full max-w-xl mx-auto text-center">
-                <div className="mb-4 text-gray-500">剩下卡片: {fcQueue.length} / {fcTotalCards}</div>
-                <div onClick={handleFlashcardFlip} className="min-h-[300px] bg-white rounded-3xl shadow p-8 cursor-pointer flex flex-col justify-center items-center">
-                  {isFlipped ? (
-                    <div>
-                      <h2 className="text-2xl font-bold mb-4">{fcQueue[0].zh}</h2>
-                      <p className="text-blue-600 italic">"{currentExample.text}"</p>
-                      <p className="text-gray-500 text-sm mt-2">{currentExample.translation}</p>
-                    </div>
-                  ) : <h2 className="text-4xl font-extrabold text-blue-600">{fcQueue[0].en}</h2>}
-                </div>
-                {isFlipped && (
-                  <div className="flex space-x-2 mt-4">
-                    <button onClick={(e) => handleSrsClick(e, 'again')} className="flex-1 p-3 bg-red-50 text-red-600 rounded-xl font-bold">Again</button>
-                    <button onClick={(e) => handleSrsClick(e, 'hard')} className="flex-1 p-3 bg-orange-50 text-orange-600 rounded-xl font-bold">Hard</button>
-                    <button onClick={(e) => handleSrsClick(e, 'good')} className="flex-1 p-3 bg-blue-50 text-blue-600 rounded-xl font-bold">Good</button>
-                    <button onClick={(e) => handleSrsClick(e, 'easy')} className="flex-1 p-3 bg-green-50 text-green-600 rounded-xl font-bold">Easy</button>
-                  </div>
-                )}
-              </div>
-             )
-          )}
-
-          {mode === 'listening' && (
-            showListenSummary ? (
-              <div className="text-center p-8 bg-white rounded-3xl">
-                <h2 className="text-3xl font-bold mb-4">測驗結束</h2>
-                <button onClick={listenWrongQueue.length === 0 ? () => setMode('menu') : startNextListenRound} className="p-4 bg-blue-600 text-white rounded-xl">
-                  {listenWrongQueue.length === 0 ? '回主選單' : `挑戰錯誤 (${listenWrongQueue.length}題)`}
-                </button>
-              </div>
-            ) : (
-              <div className="w-full max-w-xl mx-auto bg-white rounded-3xl p-8 text-center">
-                <button onClick={() => playAudio(listenQueue[listenIndex].en)} className="mx-auto w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center mb-8"><Icon name="PlayCircle" size={48} className="text-purple-600" /></button>
-                <div className="space-y-3">
-                  {listeningOptions.map((opt, idx) => (
-                    <button key={idx} onClick={() => handleListenSelect(opt.zh)} className="w-full p-4 border rounded-xl hover:bg-gray-50">{opt.zh}</button>
-                  ))}
-                </div>
-                {listenFeedback && <button onClick={handleListenNext} className="mt-4 p-3 bg-gray-100 w-full rounded-xl">下一題</button>}
-              </div>
-            )
-          )}
-
-          {mode === 'spelling' && (
-            <div className="max-w-xl mx-auto bg-white p-8 rounded-3xl text-center">
-              <h2 className="text-2xl font-bold mb-6">{filteredDB[currentIndex]?.zh}</h2>
-              <input type="text" value={userInput} onChange={e => setUserInput(e.target.value)} className="w-full p-4 border rounded-xl mb-4 text-center" />
-              <button onClick={checkSpelling} className="w-full p-4 bg-green-500 text-white rounded-xl">檢查</button>
-              {spellFeedback && <div className="mt-4 font-bold">{spellFeedback.text}</div>}
-              <div className="flex space-x-4 mt-8"><button onClick={prevWord} className="flex-1 p-3 bg-gray-100 rounded-xl">上一題</button><button onClick={nextWord} className="flex-1 p-3 bg-gray-100 rounded-xl">下一題</button></div>
-            </div>
-          )}
-
-          {mode === 'speaking' && (
-            <div className="max-w-xl mx-auto bg-white p-8 rounded-3xl text-center">
-              <h2 className="text-2xl font-bold mb-2">{filteredDB[currentIndex]?.zh}</h2>
-              <h3 className="text-xl text-blue-600 mb-8">{filteredDB[currentIndex]?.en}</h3>
-              <button onClick={handleSpeak} className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto text-white ${isRecording ? 'bg-red-500' : 'bg-orange-500'}`}><Icon name="Mic" size={48} /></button>
-              {speakFeedback && <div className="mt-4 font-bold">{speakFeedback.text}</div>}
-              <div className="flex space-x-4 mt-8"><button onClick={prevWord} className="flex-1 p-3 bg-gray-100 rounded-xl">上一題</button><button onClick={nextWord} className="flex-1 p-3 bg-gray-100 rounded-xl">下一題</button></div>
-            </div>
-          )}
         </div>
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
-</html>
+    const currentItem = fcQueue[0];
+
+    return (
+      <div className="flex flex-col items-center max-w-2xl mx-auto mt-8 w-full">
+        {/* SRS 進度條 */}
+        <div className="w-full flex justify-between items-center mb-4 px-2">
+           <span className="text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full flex items-center">
+             <Icon name="BarChart2" size={16} className="mr-1" />
+             剩下卡片數量: {fcQueue.length} / 總卡片數: {fcTotalCards}
+           </span>
+        </div>
+
+        {/* 閃卡本體 */}
+        <div 
+          className="w-full min-h-[340px] bg-white rounded-3xl shadow-lg border border-gray-100 flex flex-col items-center justify-center p-8 cursor-pointer relative transition-transform transform hover:scale-[1.01]"
+          onClick={handleFlashcardFlip}
+        >
+          <button 
+            onClick={(e) => { e.stopPropagation(); playAudio(isFlipped ? currentExample.text : currentItem.en); }}
+            className="absolute top-4 right-4 p-3 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+          >
+            <Icon name="Volume2" size={28} />
+          </button>
+          
+          <div className="text-center w-full px-4 mt-4">
+            {isFlipped ? (
+              <div className="animate-fade-in flex flex-col items-center w-full">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">{currentItem.zh}</h2>
+                <div className="h-px bg-gray-100 w-full my-4"></div>
+                <div className="w-full px-2 text-center">
+                  <p className="text-xl font-medium text-blue-700 leading-snug italic mb-3">"{currentExample.text}"</p>
+                  <p className="text-base font-medium text-gray-500">{currentExample.translation}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-fade-in">
+                <h2 className="text-3xl md:text-4xl font-extrabold text-blue-600 mb-4 leading-snug">{currentItem.en}</h2>
+              </div>
+            )}
+            <p className="text-gray-300 mt-8 text-sm flex items-center justify-center font-medium">
+              <Icon name="RefreshCw" size={14} className="mr-1" /> 點擊空白處翻轉
+            </p>
+          </div>
+        </div>
+
+        {/* SRS 回饋按鈕 */}
+        {isFlipped && (
+          <div className="w-full flex justify-between space-x-2 md:space-x-3 mt-8 animate-fade-in">
+            <button onClick={(e) => handleSrsClick(e, 'again')} className="flex-1 py-3 px-1 bg-white border-2 border-red-200 hover:bg-red-50 text-red-600 rounded-xl transition-colors flex flex-col items-center shadow-sm">
+              <span className="font-bold text-sm md:text-base mb-1">Again</span>
+              <span className="text-xs text-gray-400 font-medium">重來(位置2)</span>
+            </button>
+            <button onClick={(e) => handleSrsClick(e, 'hard')} className="flex-1 py-3 px-1 bg-white border-2 border-orange-200 hover:bg-orange-50 text-orange-600 rounded-xl transition-colors flex flex-col items-center shadow-sm">
+              <span className="font-bold text-sm md:text-base mb-1">Hard</span>
+              <span className="text-xs text-gray-400 font-medium">困難(置中)</span>
+            </button>
+            <button onClick={(e) => handleSrsClick(e, 'good')} className="flex-1 py-3 px-1 bg-white border-2 border-blue-200 hover:bg-blue-50 text-blue-600 rounded-xl transition-colors flex flex-col items-center shadow-sm">
+              <span className="font-bold text-sm md:text-base mb-1">Good</span>
+              <span className="text-xs text-gray-400 font-medium">良好(置底)</span>
+            </button>
+            <button onClick={(e) => handleSrsClick(e, 'easy')} className="flex-1 py-3 px-1 bg-white border-2 border-green-200 hover:bg-green-50 text-green-600 rounded-xl transition-colors flex flex-col items-center shadow-sm">
+              <span className="font-bold text-sm md:text-base mb-1">Easy</span>
+              <span className="text-xs text-gray-400 font-medium">簡單(移除)</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderListening = () => {
+    // 結算畫面
+    if (showListenSummary) {
+      const isPerfect = listenWrongQueue.length === 0;
+      const score = Math.round((listenCorrectCount / listenQueue.length) * 100);
+
+      return (
+        <div className="flex flex-col items-center max-w-xl mx-auto mt-8 bg-white p-8 rounded-3xl shadow-sm border border-gray-200 text-center animate-fade-in">
+          <div className={`p-4 rounded-full mb-4 ${isPerfect ? 'bg-yellow-100 text-yellow-600' : 'bg-purple-100 text-purple-600'}`}>
+            {isPerfect ? <Icon name="Award" size={48} /> : <Icon name="Headphones" size={48} />}
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            {isPerfect ? '完美通關！滿分！🎉' : `第 ${listenRound} 輪測驗結束`}
+          </h2>
+          <p className="text-gray-500 mb-6">
+            {isPerfect ? '太厲害了！你已經完全掌握這個分類的聽力了。' : '系統已將你答錯的題目整理起來，準備好針對它們特訓了嗎？'}
+          </p>
+          
+          <div className="text-6xl font-black mb-8 text-blue-600">
+            {score} <span className="text-2xl text-gray-400 font-bold">分</span>
+          </div>
+
+          <div className="flex justify-center space-x-6 mb-8 w-full">
+            <div className="bg-green-50 p-4 rounded-xl flex-1 border border-green-100">
+              <div className="text-sm text-gray-500 font-bold mb-1">答對題數</div>
+              <div className="text-2xl font-black text-green-600">{listenCorrectCount}</div>
+            </div>
+            <div className="bg-red-50 p-4 rounded-xl flex-1 border border-red-100">
+              <div className="text-sm text-gray-500 font-bold mb-1">答錯題數</div>
+              <div className="text-2xl font-black text-red-600">{listenWrongQueue.length}</div>
+            </div>
+          </div>
+
+          <div className="flex space-x-4 w-full">
+            <button onClick={() => setMode('menu')} className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-lg transition-colors shadow-sm">
+              回主選單
+            </button>
+            {isPerfect ? (
+              <button onClick={resetListeningSession} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors shadow-sm">
+                重新挑戰本分類
+              </button>
+            ) : (
+              <button onClick={startNextListenRound} className="flex-1 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-lg transition-colors shadow-sm">
+                挑戰錯誤題目 ({listenWrongQueue.length}題)
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // 測驗進行中畫面
+    const currentWord = listenQueue[listenIndex];
+
+    return (
+      <div className="flex flex-col items-center max-w-xl mx-auto mt-8 w-full">
+        <div className="w-full flex justify-between items-center mb-4 px-2">
+           <span className="text-sm font-bold text-gray-400">第 {listenRound} 輪測驗</span>
+           <span className="text-sm font-bold bg-purple-100 text-purple-700 px-3 py-1 rounded-full flex items-center">
+             <Icon name="BarChart2" size={16} className="mr-1" />
+             進度: {listenIndex + 1} / {listenQueue.length}
+           </span>
+        </div>
+
+        <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-200 p-8 text-center relative">
+          <button onClick={() => playAudio(currentWord.en)} className="mx-auto flex flex-col items-center justify-center w-32 h-32 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-full transition-colors mb-8 cursor-pointer group">
+            <Icon name="PlayCircle" size={64} className="group-hover:scale-110 transition-transform" />
+            <span className="mt-2 text-sm font-medium">點擊播放</span>
+          </button>
+
+          <div className="grid grid-cols-1 gap-3">
+            {listeningOptions.map((opt, idx) => {
+              // 依據作答狀態給予不同顏色樣式
+              let btnClass = "p-4 border-2 border-gray-100 rounded-xl text-lg font-medium text-gray-700 transition-colors ";
+              if (isListenAnswered) {
+                if (opt.zh === currentWord.zh) {
+                  btnClass += "bg-green-100 border-green-400 text-green-800"; // 永遠標示出正確答案
+                } else {
+                  btnClass += "opacity-40"; // 答完後淡化非正確選項
+                }
+              } else {
+                btnClass += "hover:border-purple-300 hover:bg-purple-50 cursor-pointer";
+              }
+
+              return (
+                <button 
+                  key={idx} 
+                  disabled={isListenAnswered}
+                  onClick={() => handleListenSelect(opt.zh)} 
+                  className={btnClass}
+                >
+                  {opt.zh}
+                </button>
+              );
+            })}
+          </div>
+
+          {listenFeedback && (
+            <div className={`mt-6 p-5 rounded-xl flex flex-col items-center justify-center ${listenFeedback.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'} animate-fade-in`}>
+               <div className="flex items-center mb-4">
+                 {listenFeedback.type === 'success' ? <Icon name="Check" className="mr-2" size={24} /> : <Icon name="X" className="mr-2" size={24} />}
+                 <span className="font-bold text-xl">{listenFeedback.text}</span>
+               </div>
+               <button onClick={handleListenNext} className="w-full py-3 bg-white text-gray-800 border-2 border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm">
+                 下一題 <Icon name="ArrowRight" size={18} className="inline ml-1 mb-1"/>
+               </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderSpelling = () => (
+    <div className="flex flex-col items-center max-w-xl mx-auto mt-8 w-full">
+      <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-200 p-8 text-center">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6">{filteredDB[currentIndex]?.zh}</h2>
+        <input
+          type="text"
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && checkSpelling()}
+          placeholder="輸入對應的英文..."
+          className="w-full p-4 border-2 border-gray-200 rounded-xl text-xl focus:border-green-500 focus:outline-none transition-colors mb-4 text-center"
+        />
+        <button onClick={checkSpelling} className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg transition-colors shadow-sm">
+          提交檢查
+        </button>
+        {spellFeedback && (
+          <div className={`mt-6 p-4 rounded-xl flex items-center justify-center ${spellFeedback.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+            {spellFeedback.type === 'success' ? <Icon name="Check" className="mr-2" /> : <Icon name="AlertCircle" className="mr-2" />}
+            <span className="font-medium text-lg">{spellFeedback.text}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSpeaking = () => (
+    <div className="flex flex-col items-center max-w-xl mx-auto mt-8 w-full">
+      <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-200 p-8 text-center relative">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">{filteredDB[currentIndex]?.zh}</h2>
+          <div className="flex justify-center items-center text-blue-600 bg-blue-50 py-3 px-6 rounded-xl inline-flex">
+             <span className="text-xl font-medium">{filteredDB[currentIndex]?.en}</span>
+             <button onClick={() => playAudio(filteredDB[currentIndex]?.en)} className="ml-3 text-blue-500 hover:text-blue-700">
+               <Icon name="Volume2" size={24} />
+             </button>
+          </div>
+        </div>
+        <button onClick={handleSpeak} disabled={isRecording} className={`mx-auto flex flex-col items-center justify-center w-32 h-32 rounded-full transition-all shadow-md ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}>
+          <Icon name="Mic" size={48} />
+          <span className="mt-2 text-sm font-bold">{isRecording ? '聆聽中...' : '點擊錄音'}</span>
+        </button>
+        <p className="mt-4 text-sm text-gray-400">請允許瀏覽器使用麥克風</p>
+        {speakFeedback && (
+          <div className={`mt-8 p-5 rounded-xl text-left ${speakFeedback.type === 'success' ? 'bg-green-50 border border-green-200' : speakFeedback.type === 'warning' ? 'bg-yellow-50 border border-yellow-200' : 'bg-red-50 border border-red-200'}`}>
+            <div className="flex items-center mb-2">
+              <span className={`font-bold text-lg ${speakFeedback.type === 'success' ? 'text-green-700' : speakFeedback.type === 'warning' ? 'text-yellow-700' : 'text-red-700'}`}>評分反饋</span>
+              {speakFeedback.score && <span className="ml-auto font-bold text-xl">{speakFeedback.score} 分</span>}
+            </div>
+            <p className="text-gray-700 text-base leading-relaxed">{speakFeedback.text}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-gray-800 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Navigation Header */}
+        {mode !== 'menu' && (
+          <div className="flex items-center justify-between mb-8">
+            <button onClick={() => setMode('menu')} className="px-5 py-2 bg-white text-gray-700 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-100 font-medium transition-colors flex items-center">
+              <Icon name="ArrowLeft" size={18} className="mr-2" /> 返回主題選單
+            </button>
+            {/* 只在非閃卡與聽力模式顯示傳統進度 */}
+            {mode !== 'flashcard' && mode !== 'listening' && (
+              <div className="text-gray-500 font-medium bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
+                進度: {currentIndex + 1} / {filteredDB.length}
+              </div>
+            )}
+          </div>
+        )}
+
+        {mode === 'menu' && renderMenu()}
+        {mode === 'flashcard' && renderFlashcard()}
+        {mode === 'spelling' && renderSpelling()}
+        {mode === 'listening' && renderListening()}
+        {mode === 'speaking' && renderSpeaking()}
+
+        {/* 傳統模式的底部「上一張/下一張」按鈕，在 flashcard 與 listening 模式下隱藏 */}
+        {mode !== 'menu' && mode !== 'flashcard' && mode !== 'listening' && (
+          <div className="flex justify-center items-center mt-10 space-x-6 max-w-xl mx-auto">
+            <button onClick={prevWord} className="flex items-center px-6 py-4 bg-white text-gray-700 rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors font-bold">
+              <Icon name="ArrowLeft" size={20} className="mr-2" /> 上一個
+            </button>
+            <button onClick={nextWord} className="flex items-center px-8 py-4 bg-blue-600 text-white rounded-xl shadow-sm hover:bg-blue-700 transition-colors font-bold text-lg">
+              下一個 <Icon name="ArrowRight" size={20} className="ml-2" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+      `}} />
+    </div>
+  );
+}
